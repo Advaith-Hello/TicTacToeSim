@@ -5,7 +5,7 @@ from game.game_utils import eval_board
 
 
 @nb.njit
-def solve_3x3(x_board, o_board, player, table):
+def create_table_3x3(x_board, o_board, player, table):
     # Checks if answer is already in table
     if (x_board, o_board) in table:
         return table[x_board, o_board][0]
@@ -15,10 +15,9 @@ def solve_3x3(x_board, o_board, player, table):
     if curr_pos_eval != 2:
         return curr_pos_eval
 
-    # Defines the variables used
-    opp_bit = 0
-    draw_bit = 0
-    draw = 0
+    # -1 = opponent wins, 0 = draw, 1 = player wins
+    status = -player
+    play_bit = 0
     playable = x_board | o_board
 
     for i in range(9):
@@ -27,25 +26,23 @@ def solve_3x3(x_board, o_board, player, table):
         if playable & bit != 0:
             continue
 
-        # Recursively finds the winner of the move
+        # Recursively makes the table
         if player == 1:
-            result = solve_3x3(x_board | bit, o_board, -player, table)
+            result = create_table_3x3(x_board | bit, o_board, -player, table)
         else:
-            result = solve_3x3(x_board, o_board | bit, -player, table)
+            result = create_table_3x3(x_board, o_board | bit, -player, table)
 
-        if result == player: # Player wins
-            table[x_board, o_board] = (result, bit)
-            return player
-        if result == 0: # Draw is marked possible
-            draw_bit = bit
-            draw = 1
-        else:
-            opp_bit = bit
+        # Victory marking
+        if result == player:
+            status = player
+            play_bit = bit
+        elif result == 0 and status == -player:
+            status = 0
+            play_bit = bit
+        elif result == -player and status == -player:
+            status = -player
+            play_bit = bit
 
-    # Draws the game if possible, if not it loses
-    if draw == 1:
-        table[x_board, o_board] = (0, draw_bit)
-        return 0
-
-    table[x_board, o_board] = (-player, opp_bit)
-    return -player
+    # Records the results of the search
+    table[x_board, o_board] = (status, play_bit)
+    return status
