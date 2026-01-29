@@ -13,6 +13,7 @@ def create_table_3x3(x_board, o_board, player, table):
     # Returns winner or draw if there is one
     curr_pos_eval = eval_board(x_board, o_board)
     if curr_pos_eval != 2:
+        table[x_board, o_board] = (curr_pos_eval, 0)
         return curr_pos_eval
 
     # -1 = opponent wins, 0 = draw, 1 = player wins
